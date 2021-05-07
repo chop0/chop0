@@ -1,8 +1,4 @@
-### Hi there 👋
 
-- 🔭 I’m currently working on school :(
-- 💬 Ask me about programming, bug hunting, java
-- 📫 How to reach me: email me at <alecthechop@gmail.com>
 
 <div>
   <br />
