@@ -1,0 +1,27 @@
+name: Stats
+on:
+  # Schedule updates
+  schedule: [{cron: "0 22 * * *"}]
+  # Lines below let you run workflow manually and on each commit
+  push: {branches: ["master"]}
+  workflow_dispatch:
+jobs:
+  github-metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: lowlighter/metrics@latest
+        with:
+          # Your GitHub token
+          token: ${{ secrets.METRICS_TOKEN }}
+          # GITHUB_TOKEN is a special auto-generated token restricted to current repository, which is used to push files in it
+          committer_token: ${{ secrets.GITHUB_TOKEN }}
+
+          # Options
+          user: codemicro
+          template: classic
+          base: header, metadata
+          config_animated: yes
+          config_timezone: Europe/London
+          plugin_isocalendar: yes
+          plugin_isocalendar_duration: half-year
+          plugin_languages: yes
