@@ -17,11 +17,11 @@ jobs:
           committer_token: ${{ secrets.GITHUB_TOKEN }}
 
           # Options
-          user: codemicro
+          user: chop0
           template: classic
           base: header, metadata
           config_animated: yes
-          config_timezone: Europe/London
+          config_timezone: America/Los_Angeles
           plugin_isocalendar: yes
           plugin_isocalendar_duration: half-year
           plugin_languages: yes
