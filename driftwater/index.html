@@ -1,0 +1,886 @@
+<title>Driftwater</title>
+<meta name="description" content="Fish messages in bottles from strangers across the sea, matched to you. Answer them to keep fishing. Collect what else the tide brings up.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{
+  --sea-deep:#0B1F2E; --sea:#123B4E; --sea-light:#1E5A6B; --sea-mist:#2C6F80;
+  --foam:#DCEAEA; --foam-dim:#9FB8BC; --moon:#F6EBC9; --lantern:#F0B454; --lantern-deep:#C98A2B;
+  --paper:#F3E9D2; --paper-edge:#D9C9A5; --ink:#2B2418; --ink-soft:#6A5C44;
+  --glass:rgba(140,210,200,.28); --glass-edge:rgba(200,240,235,.55);
+  --kelp:#0E2C36; --deck:#0A1922; --deck-line:#1F4552;
+  --good:#7CC1AB; --warn:#E07A5F; --rare:#B98CE8; --legend:#F0B454;
+  --ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Fraunces","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --radius:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sea-deep);color:var(--foam);font-family:var(--ui);font-size:15px;line-height:1.45;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--lantern);outline-offset:2px}
+input,textarea,select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--paper-edge);border-radius:10px;padding:10px 12px}
+textarea{width:100%;min-height:150px;resize:vertical;font-family:var(--display);font-size:17px;line-height:1.55;font-variation-settings:"opsz" 12}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:28px;font-variation-settings:"opsz" 72}
+h2{font-size:22px;font-variation-settings:"opsz" 48}
+h3{font-size:17px;font-variation-settings:"opsz" 24}
+p{margin:0}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--foam-dim);font-weight:700}
+.muted{color:var(--foam-dim)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- app frame ---------- */
+#app{display:grid;grid-template-rows:1fr auto;height:100%;height:100dvh}
+#stage{position:relative;overflow:hidden;min-height:0}
+#sea{position:absolute;inset:0;width:100%;height:100%;display:block}
+#skyline{position:absolute;left:0;right:0;top:0;pointer-events:none}
+#rod{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#catchLayer{position:absolute;inset:0;pointer-events:none}
+.catch{position:absolute;width:90px;height:130px;transform:translate(-50%,0) translateY(160px);opacity:0;transition:transform 1.4s cubic-bezier(.2,.9,.3,1.1),opacity .4s;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.catch.up{transform:translate(-50%,0) translateY(-40px);opacity:1}
+.catch.creature{font-size:72px;line-height:1;text-align:center;width:120px;height:100px;display:flex;align-items:center;justify-content:center}
+.drip{position:absolute;width:4px;height:12px;border-radius:2px;background:var(--foam);opacity:0;animation:drip 1.1s ease-in forwards}
+@keyframes drip{0%{opacity:.9;transform:translateY(0)}100%{opacity:0;transform:translateY(90px)}}
+.splash{position:absolute;pointer-events:none;width:140px;height:60px;transform:translate(-50%,-50%)}
+.splash i{position:absolute;left:50%;bottom:0;width:6px;height:6px;border-radius:50%;background:var(--foam);opacity:0;animation:spl .9s ease-out forwards}
+@keyframes spl{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.4)}}
+
+#hud{position:absolute;left:0;right:0;top:0;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
+#hud>*{pointer-events:auto}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand h1{color:var(--moon);text-shadow:0 2px 12px rgba(0,0,0,.35);line-height:1}
+.brand .eyebrow{color:var(--moon);opacity:.7}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(10,25,34,.7);border:1px solid var(--deck-line);font-size:12px;backdrop-filter:blur(6px)}
+.pill b{color:var(--moon)}
+.pill.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+.pill.offline::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn)}
+
+#stageMsg{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);padding:10px 16px;border-radius:12px;background:rgba(10,25,34,.78);border:1px solid var(--deck-line);color:var(--moon);font-family:var(--display);font-style:italic;font-size:17px;max-width:min(92vw,520px);text-align:center;backdrop-filter:blur(6px);transition:opacity .3s}
+#stageMsg:empty{opacity:0}
+
+/* ---------- deck ---------- */
+#deck{background:var(--deck);border-top:1px solid var(--deck-line);display:grid;grid-template-rows:auto auto;max-height:62dvh}
+#tabs{display:flex;gap:2px;padding:6px 8px 0;overflow-x:auto;scrollbar-width:none}
+#tabs button{flex:1;min-width:64px;padding:8px 6px 10px;border-radius:10px 10px 0 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--foam-dim);position:relative}
+#tabs button .ic{font-size:18px;line-height:1}
+#tabs button[aria-selected="true"]{color:var(--moon);background:var(--kelp)}
+#tabs button .badge{position:absolute;top:4px;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--lantern);color:var(--ink);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+#panel{background:var(--kelp);overflow:auto;padding:16px;min-height:150px;max-height:calc(62dvh - 58px)}
+.panel{display:none;max-width:760px;margin:0 auto}
+.panel.on{display:block}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:12px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;background:var(--sea-light);color:var(--foam);font-weight:700;letter-spacing:.02em;border:1px solid transparent;transition:transform .12s,background .15s}
+.btn:hover{background:var(--sea-mist)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--lantern);color:var(--ink)}
+.btn.primary:hover{background:#F7C877}
+.btn.ghost{background:transparent;border-color:var(--deck-line)}
+.btn.warn{background:transparent;border-color:var(--warn);color:var(--warn)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.big{padding:14px 26px;font-size:16px;border-radius:14px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid var(--deck-line);background:var(--sea);color:var(--foam);font-size:13px;display:inline-flex;gap:6px;align-items:center;transition:background .15s,border-color .15s}
+.chip[aria-pressed="true"]{background:var(--lantern);color:var(--ink);border-color:var(--lantern)}
+.chip.small{padding:4px 9px;font-size:12px}
+.chip.tag{background:rgba(255,255,255,.06)}
+.chip.tag.shared{background:rgba(124,193,171,.22);border-color:var(--good);color:#CFEFE2}
+
+.card{background:var(--sea);border:1px solid var(--deck-line);border-radius:var(--radius);padding:14px}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--sea);border:1px solid var(--deck-line);border-radius:var(--radius);padding:12px 14px;cursor:pointer;text-align:left;width:100%}
+.item:hover{border-color:var(--sea-mist)}
+.item .ico{font-size:24px;width:36px;text-align:center}
+.item .t{font-family:var(--display);font-size:16px;color:var(--moon)}
+.item .s{font-size:13px;color:var(--foam-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .r{font-size:12px;color:var(--foam-dim);text-align:right;white-space:nowrap}
+.item .r b{display:block;color:var(--moon);font-size:14px}
+.item.unread{border-color:var(--lantern)}
+
+.meter{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;flex:1;min-width:90px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--sea-mist),var(--good));border-radius:4px;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+
+.net{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{aspect-ratio:1;border-radius:12px;border:1px dashed var(--deck-line);display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(255,255,255,.03)}
+.slot.full{border-style:solid;border-color:var(--lantern);background:rgba(240,180,84,.12)}
+
+.pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.spec{position:relative;background:var(--sea);border:1px solid var(--deck-line);border-radius:12px;padding:12px 8px 8px;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center;overflow:hidden}
+.spec::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--r,var(--foam-dim))}
+.spec .em{font-size:34px;line-height:1.1}
+.spec .nm{font-size:12px;color:var(--moon)}
+.spec .ct{font-size:11px;color:var(--foam-dim)}
+.spec.locked .em{filter:grayscale(1) brightness(.35)}
+.spec.locked .nm{color:var(--foam-dim)}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--foam-dim);font-weight:700}
+.range{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px;color:var(--foam-dim)}
+input[type=range]{accent-color:var(--lantern);width:100%;background:transparent;border:0;padding:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}.net{grid-template-columns:repeat(3,1fr)}}
+.counter{font-size:12px;color:var(--foam-dim);text-align:right}
+
+/* ---------- thread ---------- */
+.thread{display:flex;flex-direction:column;gap:10px}
+.msgs{display:flex;flex-direction:column;gap:8px;max-height:36dvh;overflow:auto;padding:4px}
+.msg{max-width:82%;padding:10px 14px;border-radius:14px;font-family:var(--display);font-size:16px;line-height:1.5;font-variation-settings:"opsz" 12;white-space:pre-wrap;word-break:break-word}
+.msg.me{align-self:flex-end;background:var(--lantern);color:var(--ink);border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:var(--paper);color:var(--ink);border-bottom-left-radius:4px}
+.msg small{display:block;font-family:var(--ui);font-size:10px;opacity:.6;margin-top:4px}
+.compose{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.compose textarea{min-height:52px;max-height:140px}
+
+/* ---------- overlay: bottle opening ---------- */
+#overlay{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(30,90,107,.85),rgba(6,16,24,.96) 70%);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;backdrop-filter:blur(3px)}
+#overlay.on{display:flex}
+.scene{position:relative;width:min(96vw,560px);height:min(88dvh,720px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.bottleWrap{position:relative;width:180px;height:360px;cursor:pointer;transform-origin:50% 90%;animation:bob 3.4s ease-in-out infinite}
+.bottleWrap.still{animation:none}
+@keyframes bob{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-8px)}}
+.bottleWrap svg{width:100%;height:100%;overflow:visible}
+.cork{transform-box:fill-box;transform-origin:50% 100%;transition:none}
+.bottleWrap.opened .cork{animation:pop 1.1s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes pop{0%{transform:translate(0,0) rotate(0)}30%{transform:translate(20px,-90px) rotate(35deg)}100%{transform:translate(110px,240px) rotate(200deg);opacity:0}}
+.paperIn{transform-box:fill-box;transform-origin:50% 100%}
+.bottleWrap.opened .paperIn{animation:rise 1.2s .5s cubic-bezier(.3,.7,.3,1) forwards}
+@keyframes rise{0%{transform:translateY(0)}100%{transform:translateY(-250px);opacity:0}}
+.bottleWrap.opened{animation:none;transition:transform 1.4s 1.2s,opacity .8s 1.2s;transform:translateY(240px) scale(.7);opacity:0}
+.hint{position:absolute;bottom:-58px;left:-120px;right:-120px;white-space:nowrap;text-align:center;color:var(--moon);font-family:var(--display);font-style:italic;font-size:18px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.shine{animation:shine 4s linear infinite}
+@keyframes shine{0%{opacity:.35}50%{opacity:.7}100%{opacity:.35}}
+
+.letter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,470px);opacity:0;pointer-events:none}
+.letter.on{opacity:1;pointer-events:auto}
+.scroll{position:relative;background:var(--paper);color:var(--ink);border-radius:6px;box-shadow:0 30px 60px rgba(0,0,0,.5),inset 0 0 60px rgba(120,90,40,.12);padding:28px 30px 26px;clip-path:inset(0 0 100% 0 round 6px);transition:clip-path 1.8s cubic-bezier(.4,.1,.2,1);background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(80,60,20,.07) 31px 32px)}
+.letter.on .scroll{clip-path:inset(0 0 0% 0 round 6px)}
+.roll{position:absolute;left:-6px;right:-6px;height:22px;top:0;border-radius:11px;background:linear-gradient(180deg,#E9DCBF,#C9B78E 60%,#F3E9D2);box-shadow:0 4px 10px rgba(0,0,0,.35);transition:top 1.8s cubic-bezier(.4,.1,.2,1);pointer-events:none}
+.letter.on .roll{top:calc(100% - 10px)}
+.letter.done .roll{opacity:0;transition:opacity .4s}
+.scroll .from{font-family:var(--ui);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between;gap:8px;margin-bottom:12px}
+.scroll .body{font-family:var(--display);font-size:19px;line-height:32px;font-variation-settings:"opsz" 12;white-space:pre-wrap;word-break:break-word;min-height:96px}
+.scroll .body .cursor{display:inline-block;width:2px;height:1em;background:var(--ink);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.scroll .sig{font-family:var(--display);font-style:italic;margin-top:14px;color:var(--ink-soft);text-align:right}
+.match{margin-top:14px;padding-top:12px;border-top:1px dashed var(--paper-edge);display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .6s}
+.letter.done .match{opacity:1}
+.match .eyebrow{color:var(--ink-soft)}
+.match .why{font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:6px}
+.match .why span{background:rgba(80,60,20,.08);border-radius:999px;padding:3px 8px}
+.match .why span.shared{background:rgba(60,140,110,.18);color:#1E5A45}
+.match .fc{display:flex;align-items:center;gap:10px}
+.match .fc b{font-family:var(--display);font-size:22px;color:var(--ink);white-space:nowrap;font-variation-settings:"opsz" 36}
+.match .meter{background:rgba(80,60,20,.12)}
+.match .meter i{background:linear-gradient(90deg,#B99A5A,#3E8A6C)}
+.letterActions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;opacity:0;transition:opacity .5s .4s}
+.letter.done .letterActions{opacity:1}
+.letterActions .btn{padding:9px 14px}
+.letterActions .btn.primary{background:var(--ink);color:var(--paper)}
+.letterActions .btn.ghost{border-color:var(--paper-edge);color:var(--ink)}
+
+.creatureCard{pointer-events:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .7s cubic-bezier(.2,1.2,.3,1),opacity .4s;width:min(90vw,380px);background:var(--paper);color:var(--ink);border-radius:18px;padding:26px 24px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+.creatureCard.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+.creatureCard .em{font-size:96px;line-height:1;margin:6px 0 10px;animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.creatureCard h2{color:var(--ink)}
+.creatureCard .rarity{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:999px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#fff;background:var(--r)}
+.creatureCard p{margin-top:10px;font-family:var(--display);font-style:italic;color:var(--ink-soft)}
+.creatureCard .btn{margin-top:16px;background:var(--ink);color:var(--paper)}
+
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-20px);background:var(--paper);color:var(--ink);padding:10px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;transition:.3s;z-index:60;font-weight:700;max-width:92vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.throwBottle{position:absolute;width:60px;height:110px;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.empty{padding:26px 16px;text-align:center;color:var(--foam-dim);font-family:var(--display);font-style:italic;font-size:17px;border:1px dashed var(--deck-line);border-radius:var(--radius)}
+.note{font-size:13px;color:var(--foam-dim);line-height:1.5}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--foam-dim)}
+.kv dd{margin:0;color:var(--moon)}
+@media (prefers-reduced-motion:reduce){
+  .bottleWrap,.creatureCard .em,.hint,.shine{animation:none!important}
+  .scroll,.roll,.catch,.creatureCard,.meter i{transition-duration:.01s!important}
+}
+</style>
+
+<div id="app">
+  <div id="stage">
+    <canvas id="sea"></canvas>
+    <svg id="rod" aria-hidden="true">
+      <path id="rodPole" d="" stroke="#3B2A1E" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path id="rodPole2" d="" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path id="line" d="" stroke="rgba(230,240,240,.7)" stroke-width="1.2" fill="none"/>
+      <g id="bobber" style="display:none">
+        <ellipse cx="0" cy="0" rx="7" ry="9" fill="#E07A5F"/>
+        <ellipse cx="0" cy="-4" rx="7" ry="5" fill="#F3E9D2"/>
+        <rect x="-1" y="-16" width="2" height="8" fill="#3B2A1E"/>
+      </g>
+    </svg>
+    <div id="catchLayer"></div>
+    <div id="hud">
+      <div class="brand">
+        <span class="eyebrow">A message-in-a-bottle sea</span>
+        <h1>Driftwater</h1>
+      </div>
+      <div class="stack" style="align-items:flex-end;gap:6px">
+        <span class="pill" id="seaStatus">connecting…</span>
+        <span class="pill"><span>Net</span><b id="netCount" class="num">0/3</b></span>
+      </div>
+    </div>
+    <div id="stageMsg" aria-live="polite"></div>
+  </div>
+
+  <div id="deck">
+    <div id="tabs" role="tablist">
+      <button role="tab" data-tab="fish" aria-selected="true"><span class="ic">🎣</span>Fish</button>
+      <button role="tab" data-tab="throw"><span class="ic">🫙</span>Throw</button>
+      <button role="tab" data-tab="net"><span class="ic">🪢</span>Net<span class="badge" id="netBadge" hidden>0</span></button>
+      <button role="tab" data-tab="letters"><span class="ic">✉️</span>Letters<span class="badge" id="letterBadge" hidden>0</span></button>
+      <button role="tab" data-tab="pool"><span class="ic">🦀</span>Tide pool</button>
+      <button role="tab" data-tab="me"><span class="ic">🧭</span>Me</button>
+    </div>
+    <div id="panel">
+
+      <section class="panel on" data-panel="fish">
+        <div class="stack">
+          <div class="between">
+            <div>
+              <span class="eyebrow">What are you fishing for?</span>
+              <div class="chips" id="catFilter" style="margin-top:8px"></div>
+            </div>
+          </div>
+          <div class="between">
+            <div class="row">
+              <button class="btn primary big" id="castBtn">Cast the line</button>
+              <span class="note" id="castNote"></span>
+            </div>
+            <div class="row" style="gap:6px">
+              <span class="eyebrow">Net</span>
+              <div class="net" id="netSlots" style="width:150px"></div>
+            </div>
+          </div>
+          <p class="note">Bottles you fish up wait in your net. The net holds three. Answer a bottle, or throw it back, to make room for the next cast. The tide favours bottles from people you'd likely talk with for a while.</p>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="throw">
+        <div class="stack">
+          <div class="between">
+            <h2>Throw a bottle</h2>
+            <span class="note" id="floatingNote"></span>
+          </div>
+          <div class="field">
+            <label>Kind of message</label>
+            <div class="chips" id="catPick"></div>
+          </div>
+          <div class="field">
+            <label for="throwText">Your message</label>
+            <textarea id="throwText" maxlength="600" placeholder="Write to whoever the tide chooses…"></textarea>
+            <div class="counter"><span id="throwCount" class="num">0</span> / 600</div>
+          </div>
+          <div class="between">
+            <p class="note">Bottles float until someone fishes them up. When they answer, the conversation shows up under Letters.</p>
+            <button class="btn primary" id="throwBtn">Throw it in</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="net">
+        <div class="stack">
+          <div class="between"><h2>Your net</h2><span class="note">Answer or release to keep fishing</span></div>
+          <div class="list" id="netList"></div>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="letters">
+        <div class="stack" id="lettersHome">
+          <div class="between"><h2>Letters</h2><span class="note" id="lettersNote"></span></div>
+          <div class="list" id="threadList"></div>
+        </div>
+        <div class="thread" id="threadView" hidden>
+          <div class="between">
+            <button class="btn ghost" id="backThreads">← All letters</button>
+            <div class="r" style="text-align:right">
+              <div class="eyebrow" id="threadWith"></div>
+              <div class="note" id="threadForecast"></div>
+            </div>
+          </div>
+          <div class="msgs" id="msgs"></div>
+          <div class="compose">
+            <textarea id="replyText" maxlength="600" placeholder="Write back…"></textarea>
+            <button class="btn primary" id="sendBtn">Send</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="pool">
+        <div class="stack">
+          <div class="between"><h2>Tide pool</h2><span class="note" id="poolNote"></span></div>
+          <div class="pool" id="poolGrid"></div>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="me">
+        <div class="stack">
+          <div class="between"><h2>Who's holding the rod</h2><span class="note">The tide matches bottles on this</span></div>
+          <div class="grid2">
+            <div class="field"><label for="pName">Name on your bottles</label><input id="pName" maxlength="24" placeholder="A name or a pen name"></div>
+            <div class="field"><label for="pAge">Age</label>
+              <select id="pAge"><option value="0">Prefer not to say</option><option value="1">18–24</option><option value="2">25–34</option><option value="3">35–44</option><option value="4">45+</option></select></div>
+          </div>
+          <div class="field"><label>Things you'd happily talk about (pick up to 6)</label><div class="chips" id="pInterests"></div></div>
+          <div class="grid2">
+            <div class="field"><label>Company</label><div class="range"><span>Quiet</span><input type="range" id="pTemper" min="1" max="5" value="3"><span>Lively</span></div></div>
+            <div class="field"><label>Pace</label><div class="range"><span>Short notes</span><input type="range" id="pPace" min="1" max="5" value="3"><span>Long letters</span></div></div>
+          </div>
+          <div class="field"><label>Mood today</label><div class="chips" id="pMood"></div></div>
+          <div class="between">
+            <dl class="kv"><dt>Your hours</dt><dd id="pHours"></dd><dt>Language</dt><dd id="pLang"></dd><dt>Harbour id</dt><dd id="pId" class="num"></dd></dl>
+            <button class="btn primary" id="saveProfile">Save</button>
+          </div>
+          <p class="note">Hours and language are read from your device. Your harbour id is stored in this browser only; clear site data and the sea forgets you.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div id="overlay" role="dialog" aria-modal="true">
+  <div class="scene">
+    <div class="bottleWrap" id="bottleWrap" tabindex="0" aria-label="Uncork the bottle">
+      <svg viewBox="0 0 180 360" aria-hidden="true">
+        <defs>
+          <linearGradient id="gl" x1="0" x2="1"><stop offset="0" stop-color="rgba(120,200,190,.25)"/><stop offset=".35" stop-color="rgba(200,240,235,.55)"/><stop offset=".5" stop-color="rgba(120,200,190,.2)"/><stop offset="1" stop-color="rgba(80,150,150,.35)"/></linearGradient>
+          <clipPath id="bodyClip"><path d="M62 80 Q62 60 90 60 Q118 60 118 80 L118 120 Q150 140 150 200 L150 320 Q150 350 120 350 L60 350 Q30 350 30 320 L30 200 Q30 140 62 120 Z"/></clipPath>
+        </defs>
+        <g class="paperIn" clip-path="url(#bodyClip)">
+          <rect x="60" y="150" width="60" height="150" rx="6" fill="#F3E9D2" transform="rotate(-8 90 225)"/>
+          <rect x="60" y="150" width="60" height="150" rx="6" fill="none" stroke="#D9C9A5" transform="rotate(-8 90 225)"/>
+          <path d="M70 175 h40 M70 190 h36 M70 205 h40 M70 220 h30 M70 235 h40" stroke="#B9A883" stroke-width="2" transform="rotate(-8 90 225)"/>
+        </g>
+        <path d="M62 80 Q62 60 90 60 Q118 60 118 80 L118 120 Q150 140 150 200 L150 320 Q150 350 120 350 L60 350 Q30 350 30 320 L30 200 Q30 140 62 120 Z" fill="url(#gl)" stroke="rgba(210,245,240,.7)" stroke-width="2.5"/>
+        <path class="shine" d="M48 200 Q46 260 50 320" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".5"/>
+        <path d="M40 130 Q40 300 40 335" stroke="rgba(255,255,255,.25)" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <g class="cork">
+          <rect x="68" y="34" width="44" height="46" rx="8" fill="#9E6B3F"/>
+          <rect x="68" y="34" width="44" height="46" rx="8" fill="none" stroke="#6B4527" stroke-width="2"/>
+          <path d="M76 42 v28 M90 40 v32 M104 42 v28" stroke="#7A4E2B" stroke-width="2"/>
+        </g>
+      </svg>
+      <div class="hint" id="hint">Tap the bottle to uncork it</div>
+    </div>
+    <div class="letter" id="letter">
+      <div class="scroll">
+        <div class="from"><span id="lFrom"></span><span id="lCat"></span></div>
+        <div class="body" id="lBody"></div>
+        <div class="sig" id="lSig"></div>
+        <div class="match">
+          <span class="eyebrow">Tide forecast</span>
+          <div class="fc"><b id="lForecast"></b><div class="meter"><i id="lMeter"></i></div></div>
+          <div class="why" id="lWhy"></div>
+        </div>
+        <div class="letterActions">
+          <button class="btn ghost" id="lRelease">Throw it back</button>
+          <button class="btn ghost" id="lKeep">Keep in net</button>
+          <button class="btn primary" id="lReply">Write back now</button>
+        </div>
+      </div>
+      <div class="roll"></div>
+    </div>
+    <div class="creatureCard" id="creatureCard">
+      <span class="eyebrow" id="cKind">Something else on the line</span>
+      <div class="em" id="cEm"></div>
+      <h2 id="cName"></h2>
+      <span class="rarity" id="cRarity"></span>
+      <p id="cDesc"></p>
+      <button class="btn" id="cClose">Into the tide pool</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+'use strict';
+/* =========================== data =========================== */
+const CATS = [
+  {id:'romance',  em:'💌', name:'Romance',      blurb:'letters for a heart out there'},
+  {id:'lessons',  em:'🧭', name:'Life lessons', blurb:'what the years taught someone'},
+  {id:'confess',  em:'🤫', name:'Confessions',  blurb:'things easier to tell a stranger'},
+  {id:'question', em:'❓', name:'Questions',    blurb:'asked of whoever finds it'},
+  {id:'story',    em:'📖', name:'Stories',      blurb:'something that happened'},
+  {id:'cheer',    em:'☀️', name:'Encouragement',blurb:'for a rough day'},
+  {id:'joke',     em:'😄', name:'Jokes',        blurb:'to make the finder laugh'},
+];
+const INTERESTS = ['music','books','film','cooking','hiking','sea','cities','science','games','art','gardens','travel','football','philosophy','animals','late nights','coffee','coding','history','poetry'];
+const MOODS = [
+  {id:'calm',name:'calm'},{id:'restless',name:'restless'},{id:'hopeful',name:'hopeful'},
+  {id:'lonely',name:'lonely'},{id:'playful',name:'playful'},{id:'thoughtful',name:'thoughtful'},
+];
+const MOOD_PAIR = { // how well two moods carry a conversation, 0..1
+  calm:{calm:.8,restless:.4,hopeful:.8,lonely:.9,playful:.6,thoughtful:1},
+  restless:{calm:.4,restless:.7,hopeful:.6,lonely:.5,playful:.9,thoughtful:.5},
+  hopeful:{calm:.8,restless:.6,hopeful:1,lonely:.9,playful:.8,thoughtful:.8},
+  lonely:{calm:.9,restless:.5,hopeful:.9,lonely:1,playful:.5,thoughtful:.9},
+  playful:{calm:.6,restless:.9,hopeful:.8,lonely:.5,playful:1,thoughtful:.6},
+  thoughtful:{calm:1,restless:.5,hopeful:.8,lonely:.9,playful:.6,thoughtful:1},
+};
+const RARITY = {common:{n:'Common',c:'#6E8E93',w:60},uncommon:{n:'Uncommon',c:'#5AA88C',w:25},rare:{n:'Rare',c:'#B98CE8',w:11},legendary:{n:'Legendary',c:'#F0B454',w:4}};
+const SPECIES = [
+  {id:'hermit',   em:'🐚', name:'Hermit crab',   kind:'crab', r:'common',   d:'Moved house three times this week. Refuses to discuss it.'},
+  {id:'fiddler',  em:'🦀', name:'Fiddler crab',  kind:'crab', r:'common',   d:'One enormous claw, waved at you like a greeting or a threat.'},
+  {id:'sardine',  em:'🐟', name:'Sardine',       kind:'fish', r:'common',   d:'Lost its school. Seems relieved.'},
+  {id:'seaweed',  em:'🌿', name:'Kelp tangle',   kind:'flotsam', r:'common',d:'Not a creature. Still, it came up with the line.'},
+  {id:'boot',     em:'🥾', name:'Old boot',      kind:'flotsam', r:'common',d:'A classic. The left one. Someone out there has the right.'},
+  {id:'starfish', em:'⭐', name:'Starfish',      kind:'other',r:'common',   d:'Held on to the hook out of curiosity, not hunger.'},
+  {id:'clown',    em:'🐠', name:'Clownfish',     kind:'fish', r:'uncommon', d:'Bright orange and slightly offended to be here.'},
+  {id:'blue',     em:'🦀', name:'Blue crab',     kind:'crab', r:'uncommon', d:'Sidles. Never walks. Sidles.'},
+  {id:'jelly',    em:'🪼', name:'Moon jelly',    kind:'other',r:'uncommon', d:'Glows faintly, like a lantern someone forgot to put out.'},
+  {id:'shrimp',   em:'🦐', name:'Pistol shrimp', kind:'other',r:'uncommon', d:'Snaps its claw loud enough to make you drop the rod.'},
+  {id:'puffer',   em:'🐡', name:'Pufferfish',    kind:'fish', r:'uncommon', d:'Inflated on arrival. Deflated once it saw you meant no harm.'},
+  {id:'ghost',    em:'👻', name:'Ghost crab',    kind:'crab', r:'rare',     d:'Pale as sand, quick as rumour. Rarely seen by daylight.'},
+  {id:'seahorse', em:'🦭', name:'Harbour seal',  kind:'other',r:'rare',     d:'Not on the line at all. Just followed the bottle up to watch.'},
+  {id:'octo',     em:'🐙', name:'Octopus',       kind:'other',r:'rare',     d:'Has already read three of the bottles down there. Won\'t say which.'},
+  {id:'angler',   em:'🎏', name:'Lanternfish',   kind:'fish', r:'rare',     d:'Carries its own light. Bottles seem to follow it.'},
+  {id:'coconut',  em:'🥥', name:'Coconut crab',  kind:'crab', r:'rare',     d:'Big enough to open a bottle itself. Politely didn\'t.'},
+  {id:'turtle',   em:'🐢', name:'Sea turtle',    kind:'other',r:'legendary',d:'Older than the harbour. Has seen every bottle come and go.'},
+  {id:'whale',    em:'🐋', name:'Passing whale', kind:'other',r:'legendary',d:'Did not fit on the line. Surfaced anyway, to say hello.'},
+  {id:'duck',     em:'🦆', name:'Rubber duck',   kind:'flotsam',r:'legendary',d:'From a container spill decades ago. Still smiling.'},
+];
+const OFFLINE_SEEDS = /*SEEDS*/[{"id":"b_seed01","authorId":"castaway_ines0","authorName":"Ines","profile":{"name":"Ines","age":2,"interests":["sea","poetry","coffee","late nights"],"temper":2,"pace":4,"mood":"lonely","tz":1,"lang":"pt"},"category":"romance","text":"I don't know who will find this. I only know I wanted to write to someone who isn't already tired of me. Tell me one thing you love that nobody asks you about. I'll tell you mine: the sound of the harbour chain at 3am, when the boats pull against it like they want to leave too.","createdAt":"2026-09-05T23:35:31.462Z","status":"floating","hops":1,"seed":true},{"id":"b_seed02","authorId":"castaway_tomasz1","authorName":"Tomasz","profile":{"name":"Tomasz","age":3,"interests":["hiking","cooking","history","animals"],"temper":3,"pace":3,"mood":"hopeful","tz":1,"lang":"pl"},"category":"romance","text":"My grandmother met my grandfather because of a letter delivered to the wrong flat. I'm not asking the sea for the same luck. I'm just saying I've stopped ruling it out. What was the last small thing that made you happy?","createdAt":"2026-08-29T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed03","authorId":"castaway_maya2","authorName":"Maya","profile":{"name":"Maya","age":1,"interests":["music","film","cities","late nights"],"temper":4,"pace":2,"mood":"playful","tz":-5,"lang":"en"},"category":"romance","text":"Rules for whoever fishes this up: 1) You have to tell me your favourite song right now, not your all-time one. 2) No talking about work. 3) If we get to ten letters we have to invent a secret handshake we'll never use. Deal?","createdAt":"2026-08-22T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed04","authorId":"castaway_ruth3","authorName":"Ruth","profile":{"name":"Ruth","age":4,"interests":["gardens","books","animals","history"],"temper":2,"pace":5,"mood":"calm","tz":0,"lang":"en"},"category":"lessons","text":"I am sixty-one and I have learned exactly one thing worth writing down: nobody is thinking about you as much as you think they are. It sounds cruel, but it is the most freeing sentence I know. Wear the coat. Sing on the bus. Send the letter.","createdAt":"2026-08-15T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed05","authorId":"castaway_dev4","authorName":"Dev","profile":{"name":"Dev","age":2,"interests":["coding","science","games","coffee"],"temper":3,"pace":3,"mood":"thoughtful","tz":5.5,"lang":"en"},"category":"lessons","text":"I spent three years building something nobody used. What I'd tell my past self isn't \"don't\"; it's \"show someone after three weeks, not three years.\" Does anyone else have a lesson that cost too much to learn?","createdAt":"2026-08-08T23:35:31.470Z","status":"floating","hops":1,"seed":true},{"id":"b_seed06","authorId":"castaway_halima5","authorName":"Halima","profile":{"name":"Halima","age":3,"interests":["cooking","travel","philosophy","music"],"temper":3,"pace":4,"mood":"hopeful","tz":3,"lang":"ar"},"category":"lessons","text":"When my father was dying he said the days he regretted were not the ones where he failed, but the ones where he didn't try because he was afraid of looking foolish. I think about it whenever I hesitate before speaking to a stranger. Hello, stranger.","createdAt":"2026-08-01T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed07","authorId":"castaway_anonymous6","authorName":"Anonymous","profile":{"name":"Anonymous","age":0,"interests":["late nights","film","cities"],"temper":2,"pace":3,"mood":"restless","tz":-8,"lang":"en"},"category":"confess","text":"I still have my ex's Netflix password. Not because I use it. Because logging out would make it real. That's the whole confession. It feels smaller now that it's in a bottle.","createdAt":"2026-09-03T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed08","authorId":"castaway_j7","authorName":"J.","profile":{"name":"J.","age":2,"interests":["music","art","coffee","poetry"],"temper":2,"pace":4,"mood":"lonely","tz":2,"lang":"de"},"category":"confess","text":"I told everyone I moved here for the job. I moved here because I wanted to be somewhere nobody knew the old version of me. It worked, mostly. The problem is that nobody knows the new one either.","createdAt":"2026-08-27T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed09","authorId":"castaway_marisol8","authorName":"Marisol","profile":{"name":"Marisol","age":3,"interests":["cooking","animals","gardens","football"],"temper":4,"pace":2,"mood":"playful","tz":-6,"lang":"es"},"category":"confess","text":"I pretend my dog's vet appointments run long so I can sit in the car for twenty minutes with the radio on. That's it. Twenty minutes where nobody needs anything. Do you have a place like that?","createdAt":"2026-08-20T23:35:31.470Z","status":"floating","hops":1,"seed":true},{"id":"b_seed10","authorId":"castaway_kenji9","authorName":"Kenji","profile":{"name":"Kenji","age":2,"interests":["science","philosophy","games","hiking"],"temper":2,"pace":3,"mood":"thoughtful","tz":9,"lang":"ja"},"category":"question","text":"If you could know the exact number of times you'll see the ocean for the rest of your life, would you want to? I keep changing my answer. I'm curious what yours is tonight.","createdAt":"2026-08-13T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed11","authorId":"castaway_priya10","authorName":"Priya","profile":{"name":"Priya","age":1,"interests":["books","film","art","cities"],"temper":3,"pace":3,"mood":"hopeful","tz":5.5,"lang":"en"},"category":"question","text":"What is something you were completely wrong about, and glad to be? Mine: I thought I hated cities. Turns out I hated the one I grew up in.","createdAt":"2026-08-06T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed12","authorId":"castaway_owen11","authorName":"Owen","profile":{"name":"Owen","age":3,"interests":["football","history","cooking","travel"],"temper":5,"pace":2,"mood":"playful","tz":0,"lang":"en"},"category":"question","text":"Serious question for a stranger: what's the best sandwich you have ever eaten, and where were you when you ate it? The where matters more than the sandwich. I'll go second.","createdAt":"2026-07-30T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed13","authorId":"castaway_agnes12","authorName":"Agnes","profile":{"name":"Agnes","age":4,"interests":["sea","history","books","gardens"],"temper":2,"pace":5,"mood":"calm","tz":-1,"lang":"fr"},"category":"story","text":"In 1994 my brother threw a bottle off the ferry at Roscoff. In 2011 a woman in Cornwall wrote to say she'd found it on a beach the morning after her divorce was final, and that \"it made a bad day strange instead of just bad.\" That's all I want this one to do.","createdAt":"2026-09-01T23:35:31.470Z","status":"floating","hops":1,"seed":true},{"id":"b_seed14","authorId":"castaway_bakary13","authorName":"Bakary","profile":{"name":"Bakary","age":2,"interests":["music","coding","cities","late nights"],"temper":3,"pace":4,"mood":"restless","tz":0,"lang":"en"},"category":"story","text":"Last winter the power went out on our whole street and everyone came outside like it was a fire drill. A neighbour I had never spoken to in four years brought out a guitar. Now we have a group chat. It took a blackout. What did it take on your street?","createdAt":"2026-08-25T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed15","authorId":"castaway_linnea14","authorName":"Linnea","profile":{"name":"Linnea","age":3,"interests":["hiking","animals","sea","science"],"temper":2,"pace":4,"mood":"thoughtful","tz":1,"lang":"sv"},"category":"story","text":"I once got lost on a fell walk and was found by a sheepdog who simply refused to leave me alone until I followed it to a farmhouse. The farmer said she does that. She just picks people. I think about being picked a lot.","createdAt":"2026-08-18T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed16","authorId":"castaway_sam15","authorName":"Sam","profile":{"name":"Sam","age":2,"interests":["games","music","coffee","film"],"temper":4,"pace":2,"mood":"hopeful","tz":-5,"lang":"en"},"category":"cheer","text":"Whoever you are: you got up today. You're out here fishing for messages instead of doomscrolling. That's two wins before lunch. Tell me a third and I'll believe you.","createdAt":"2026-08-11T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed17","authorId":"castaway_nadia16","authorName":"Nadia","profile":{"name":"Nadia","age":3,"interests":["gardens","cooking","books","animals"],"temper":3,"pace":3,"mood":"calm","tz":2,"lang":"ru"},"category":"cheer","text":"I planted tomatoes in April knowing my landlord might sell the flat by summer. He did. But somebody is eating those tomatoes. Plant the thing anyway. I mean it in whatever way you need me to mean it.","createdAt":"2026-08-04T23:35:31.470Z","status":"floating","hops":1,"seed":true},{"id":"b_seed18","authorId":"castaway_theo17","authorName":"Theo","profile":{"name":"Theo","age":1,"interests":["football","hiking","science","travel"],"temper":5,"pace":2,"mood":"playful","tz":10,"lang":"en"},"category":"cheer","text":"Greetings from the far side of the clock. It is already tomorrow here and I can confirm: it's fine. You get there. Whatever tonight is, it's already behind someone.","createdAt":"2026-07-28T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed19","authorId":"castaway_fran18","authorName":"Fran","profile":{"name":"Fran","age":3,"interests":["film","coffee","cities","art"],"temper":4,"pace":2,"mood":"playful","tz":-3,"lang":"en"},"category":"joke","text":"I told my therapist I keep hearing the sea. She said that's normal, I live by the sea. I said no, it's in my headphones, I can't work out how to change the app. Anyway she charged me for the full hour. Got a better one?","createdAt":"2026-08-30T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed20","authorId":"castaway_mikael19","authorName":"Mikael","profile":{"name":"Mikael","age":2,"interests":["coding","games","science","late nights"],"temper":2,"pace":3,"mood":"restless","tz":2,"lang":"fi"},"category":"joke","text":"Threw a bottle in last week with a joke about recursion. Still waiting for it to come back. Meanwhile: why did the crab never share? Because it was shellfish. Yes, I know. Reply with a worse one and I'll respect you.","createdAt":"2026-08-23T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed21","authorId":"castaway_cleo20","authorName":"Cleo","profile":{"name":"Cleo","age":2,"interests":["art","poetry","sea","travel"],"temper":3,"pace":5,"mood":"thoughtful","tz":-7,"lang":"en"},"category":"romance","text":"I'm not looking for love, I'm looking for the kind of letter you read twice. If you're the kind of person who reads things twice, write back. Tell me the last line of the book on your nightstand.","createdAt":"2026-08-16T23:35:31.470Z","status":"floating","hops":1,"seed":true},{"id":"b_seed22","authorId":"castaway_ibrahim21","authorName":"Ibrahim","profile":{"name":"Ibrahim","age":3,"interests":["philosophy","history","coffee","cooking"],"temper":2,"pace":5,"mood":"calm","tz":3,"lang":"tr"},"category":"question","text":"Do you think people are mostly the same everywhere, or mostly different? I have moved countries three times and I change my mind every time the coffee is good.","createdAt":"2026-08-09T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed23","authorId":"castaway_wren22","authorName":"Wren","profile":{"name":"Wren","age":1,"interests":["animals","gardens","music","poetry"],"temper":2,"pace":3,"mood":"lonely","tz":-8,"lang":"en"},"category":"story","text":"My first week alone in a new city, a crow started leaving bottle caps on my windowsill. I've started leaving peanuts. We are, I think, friends now. It is the only friend I have here. It's a good one though.","createdAt":"2026-08-02T23:35:31.470Z","status":"floating","hops":0,"seed":true},{"id":"b_seed24","authorId":"castaway_gus23","authorName":"Gus","profile":{"name":"Gus","age":4,"interests":["sea","football","cooking","history"],"temper":4,"pace":3,"mood":"hopeful","tz":10,"lang":"en"},"category":"lessons","text":"Forty years on trawlers. The lesson: the sea doesn't care, and that's the good news. It means you don't have to take any of it personally. Apply to weather, bosses, and most of the internet.","createdAt":"2026-09-04T23:35:31.470Z","status":"floating","hops":0,"seed":true}]/*/SEEDS*/;
+
+/* =========================== helpers =========================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = (p='h') => p + '_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = (a,b) => a + Math.random()*(b-a);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('dw_'+k); return v==null ? d : JSON.parse(v);}catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem('dw_'+k, JSON.stringify(v)); }catch{} },
+};
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let toastT; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2600); }
+function stageMsg(msg){ $('#stageMsg').textContent = msg; }
+const catOf = id => CATS.find(c=>c.id===id) || CATS[0];
+const ago = iso => { const d=(Date.now()-new Date(iso))/1000; if(d<60) return 'just now'; if(d<3600) return Math.floor(d/60)+' min ago'; if(d<86400) return Math.floor(d/3600)+' h ago'; return Math.floor(d/86400)+' d ago'; };
+
+/* =========================== player =========================== */
+const me = { id: store.get('id') || (()=>{ const id=uid('h'); store.set('id',id); return id; })() };
+const defaultProfile = () => ({ name:'', age:0, interests:[], temper:3, pace:3, mood:'hopeful', tz:-new Date().getTimezoneOffset()/60, lang:(navigator.language||'en').slice(0,2).toLowerCase() });
+let profile = Object.assign(defaultProfile(), store.get('profile', {}));
+profile.tz = -new Date().getTimezoneOffset()/60; profile.lang = (navigator.language||'en').slice(0,2).toLowerCase();
+let net = store.get('net', []);           // caught bottles awaiting an answer
+let collection = store.get('collection', {}); // species id -> count
+let stats = store.get('stats', {thrown:0, caught:0, replied:0, casts:0});
+let seen = store.get('seen', {});          // threadId -> message count seen
+let released = store.get('released', []);  // bottle ids thrown back this browser
+let wanted = store.get('wanted', CATS.map(c=>c.id));
+const displayName = () => profile.name.trim() || 'A stranger';
+
+/* =========================== matching =========================== */
+function tzGap(a,b){ const d=Math.abs((a??0)-(b??0)); return Math.min(d, 24-d); }
+function match(a, b, category){
+  // a = recipient (me), b = sender. Returns score 0..100 and reasons.
+  const why=[]; let s=0;
+  const ai=new Set(a.interests||[]), bi=new Set(b.interests||[]);
+  const shared=[...ai].filter(x=>bi.has(x)); const uni=new Set([...ai,...bi]).size||1;
+  const j = shared.length/uni; s += 30*Math.min(1, j*2 + shared.length*.08);
+  shared.forEach(x=>why.push({t:x, shared:true}));
+  const gap = tzGap(a.tz,b.tz); const hoursScore = 1-gap/12; s += 15*hoursScore;
+  if(gap<=2) why.push({t:'awake at the same hours'}); else if(gap>=8) why.push({t:'half a world apart'});
+  const pace = 1-Math.abs((a.pace??3)-(b.pace??3))/4; s += 15*pace; if(pace>=.75) why.push({t:'similar pace'});
+  const temp = 1-Math.abs((a.temper??3)-(b.temper??3))/4; s += 10*temp; if(temp>=.75) why.push({t:'similar company'});
+  if((a.lang||'en')===(b.lang||'en')){ s+=12; } else { s+=3; why.push({t:'different first languages'}); }
+  const mp = (MOOD_PAIR[a.mood]||{})[b.mood] ?? .6; s += 8*mp; if(mp>=.9) why.push({t:`${a.mood} meets ${b.mood}`});
+  if(a.age && b.age){ const ag=1-Math.abs(a.age-b.age)/3; s+=10*ag; if(ag>=.66) why.push({t:'close in age'}); } else s+=5;
+  if(category && (wanted.includes(category))) s+=0; // filter already guarantees; kept for clarity
+  s = Math.max(4, Math.min(100, Math.round(s)));
+  return {score:s, why, exchanges: Math.round(2 + (s/100)*12)};
+}
+function weightedPick(items, weightOf){
+  const ws = items.map(weightOf); const tot = ws.reduce((a,b)=>a+b,0); let r=Math.random()*tot;
+  for(let i=0;i<items.length;i++){ r-=ws[i]; if(r<=0) return items[i]; } return items[items.length-1];
+}
+
+/* =========================== stores =========================== */
+// Both stores expose the same small surface so the game never cares which sea it is in.
+function LocalStore(){
+  const st = store.get('localsea', null) || { bottles: Object.fromEntries(OFFLINE_SEEDS.map(b=>[b.id, b])), threads:{} };
+  const save = () => store.set('localsea', st);
+  const listeners = new Set();
+  const ping = () => listeners.forEach(fn=>fn());
+  return {
+    kind:'offline',
+    async listFloating(cats){ return Object.values(st.bottles).filter(b=>b.status==='floating' && cats.includes(b.category)); },
+    async countFloatingBy(author){ return Object.values(st.bottles).filter(b=>b.status==='floating'&&b.authorId===author).length; },
+    async countAllFloating(){ return Object.values(st.bottles).filter(b=>b.status==='floating').length; },
+    async claimBottle(id){ const b=st.bottles[id]; if(!b||b.status!=='floating') return null; b.status='caught'; b.catcherId=me.id; b.caughtAt=new Date().toISOString(); save(); return {...b}; },
+    async addBottle(b){ st.bottles[b.id]=b; save(); return b; },
+    async releaseBottle(id){ const b=st.bottles[id]; if(!b) return; b.status='floating'; b.catcherId=null; b.hops=(b.hops||0)+1; save(); },
+    async getThread(id){ return st.threads[id]||null; },
+    async setThread(t){ st.threads[t.id]=t; save(); ping(); },
+    watchThreads(cb){ const fn=()=>cb(Object.values(st.threads).filter(t=>t.participants.includes(me.id))); listeners.add(fn); fn(); return ()=>listeners.delete(fn); },
+    async savePlayer(){},
+  };
+}
+function DbStore(db){
+  const bottles = db.collection('bottles'), threads = db.collection('threads'), players = db.collection('players');
+  const retry = async fn => { try{ return await fn(); }catch(e){ if(e&&e.code==='unavailable'){ await sleep(300+Math.random()*400); return fn(); } throw e; } };
+  return {
+    kind:'shared',
+    async listFloating(cats){
+      const out=[]; for(let i=0;i<cats.length;i+=10){ // 'in' takes up to 30, keep queries modest
+        const snap = await retry(()=>bottles.where('status','==','floating').where('category','in',cats.slice(i,i+10)).limit(300).get());
+        snap.docs.forEach(d=>out.push({id:d.id, ...d.data()}));
+      } return out;
+    },
+    async countFloatingBy(author){ const s=await retry(()=>bottles.where('authorId','==',author).where('status','==','floating').limit(50).get()); return s.size; },
+    async countAllFloating(){ const s=await retry(()=>bottles.where('status','==','floating').limit(1000).get()); return s.size; },
+    async claimBottle(id){
+      const ref = bottles.doc(id);
+      const lease = await retry(()=>ref.acquire({holder:me.id, ttlMs:6000}));
+      if(!lease.acquired) return null;
+      const snap = await ref.get(); if(!snap.exists) return null;
+      const b = snap.data(); if(b.status!=='floating') return null;
+      await ref.update({status:'caught', catcherId:me.id, caughtAt:new Date().toISOString()});
+      return {id, ...b, status:'caught', catcherId:me.id};
+    },
+    async addBottle(b){ const {id, ...body}=b; await retry(()=>bottles.doc(id).set(body)); return b; },
+    async releaseBottle(id){ const ref=bottles.doc(id); const s=await ref.get(); if(!s.exists) return; await ref.update({status:'floating', catcherId:null, hops:(s.data().hops||0)+1}); },
+    async getThread(id){ const s=await threads.doc(id).get(); return s.exists ? {id, ...s.data()} : null; },
+    async setThread(t){ const {id, ...body}=t; await retry(()=>threads.doc(id).set(body)); },
+    watchThreads(cb){ return threads.where('participants','array-contains',me.id).limit(200).onSnapshot(s=>cb(s.docs.map(d=>({id:d.id, ...d.data()}))), e=>{ console.warn('threads', e); }); },
+    async savePlayer(data){ try{ await players.doc(me.id).set(data); }catch(e){ console.warn(e); } },
+  };
+}
+let sea = null; // set once claude.use('db') resolves
+
+/* =========================== ocean canvas =========================== */
+const cv = $('#sea'), ctx = cv.getContext('2d');
+let W=0, H=0, dpr=1, t0=performance.now();
+function resize(){ const r=$('#stage').getBoundingClientRect(); dpr=Math.min(2, devicePixelRatio||1); W=r.width; H=r.height; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); drawRod(); }
+addEventListener('resize', resize);
+const horizon = () => H*0.42;
+function waveY(x, t, layer=0){
+  const base = horizon() + layer*18;
+  return base + Math.sin(x*0.012 + t*0.0011 + layer)*7 + Math.sin(x*0.031 - t*0.0017 + layer*2)*4 + Math.sin(x*0.005 + t*0.0006)*9;
+}
+let lastFrame=0;
+function draw(now){
+  requestAnimationFrame(draw);
+  if(reduced && lastFrame) return; // one still frame
+  if(now-lastFrame < 33) return; lastFrame=now;
+  const t = now - t0;
+  // sky
+  const sky = ctx.createLinearGradient(0,0,0,horizon()); sky.addColorStop(0,'#0B1F2E'); sky.addColorStop(.7,'#1B3E52'); sky.addColorStop(1,'#3A5F6A');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,horizon()+40);
+  // stars
+  ctx.fillStyle='rgba(246,235,201,.75)';
+  for(let i=0;i<40;i++){ const x=((i*997)%1000)/1000*W, y=((i*613)%1000)/1000*horizon()*0.8; const tw=.5+.5*Math.sin(t*0.002+i); ctx.globalAlpha=tw*.8; ctx.fillRect(x,y,1.5,1.5); }
+  ctx.globalAlpha=1;
+  // moon
+  const mx=W*0.72, my=horizon()*0.32;
+  const glow=ctx.createRadialGradient(mx,my,10,mx,my,90); glow.addColorStop(0,'rgba(246,235,201,.35)'); glow.addColorStop(1,'rgba(246,235,201,0)'); ctx.fillStyle=glow; ctx.fillRect(mx-90,my-90,180,180);
+  ctx.fillStyle='#F6EBC9'; ctx.beginPath(); ctx.arc(mx,my,22,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1B3E52'; ctx.beginPath(); ctx.arc(mx-9,my-6,18,0,Math.PI*2); ctx.fill();
+  // distant headland + lighthouse
+  ctx.fillStyle='#0C2230'; ctx.beginPath(); ctx.moveTo(0,horizon()+4); ctx.quadraticCurveTo(W*0.08,horizon()-26,W*0.2,horizon()-14); ctx.quadraticCurveTo(W*0.26,horizon()-8,W*0.3,horizon()+4); ctx.closePath(); ctx.fill();
+  const lx=W*0.12, ly=horizon()-26; ctx.fillStyle='#0C2230'; ctx.fillRect(lx-4,ly-26,8,28); ctx.fillStyle='#F0B454'; ctx.globalAlpha=.6+.4*Math.sin(t*0.003); ctx.fillRect(lx-3,ly-24,6,5); ctx.globalAlpha=1;
+  const beam=ctx.createLinearGradient(lx,ly-22,lx+140,ly-22); beam.addColorStop(0,'rgba(240,180,84,.25)'); beam.addColorStop(1,'rgba(240,180,84,0)'); ctx.fillStyle=beam; ctx.globalAlpha=.5+.3*Math.sin(t*0.003); ctx.beginPath(); ctx.moveTo(lx,ly-24); ctx.lineTo(lx+160,ly-40); ctx.lineTo(lx+160,ly-4); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+  // water layers
+  const cols=['#1E5A6B','#173F52','#123B4E','#0F2F40'];
+  for(let l=0;l<4;l++){
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=6) ctx.lineTo(x, waveY(x,t,l));
+    ctx.lineTo(W,H); ctx.closePath();
+    const g=ctx.createLinearGradient(0,horizon(),0,H); g.addColorStop(0,cols[l]); g.addColorStop(1,'#0B1F2E'); ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle= l===0 ? 'rgba(220,234,234,.35)' : 'rgba(220,234,234,.08)'; ctx.lineWidth=1.2; ctx.beginPath();
+    for(let x=0;x<=W;x+=6){ const y=waveY(x,t,l); x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke();
+  }
+  // moon glitter
+  ctx.fillStyle='rgba(246,235,201,.5)';
+  for(let i=0;i<26;i++){ const y=horizon()+10+i*((H-horizon())/28); const spread=10+i*4; const x=mx+Math.sin(t*0.0013+i*1.7)*spread; const w=6+i*.8; ctx.globalAlpha=(.6-i*.02)*(.5+.5*Math.sin(t*0.004+i)); ctx.fillRect(x-w/2,y,w,1.5); }
+  ctx.globalAlpha=1;
+  if(bob.on) placeBobber(t);
+}
+/* rod + line */
+const bob = { on:false, x:0, y:0, dip:0, target:0 };
+function rodTip(){ return {x:W-150, y:H*0.30}; }
+function drawRod(){
+  const tip=rodTip(); const d=`M${W-30},${H+20} Q${W-60},${H*0.62} ${tip.x},${tip.y}`;
+  $('#rodPole').setAttribute('d', d); $('#rodPole2').setAttribute('d', d);
+}
+function placeBobber(t){
+  const tip=rodTip(); const y = waveY(bob.x, t, 0) - 4 + bob.dip; bob.y=y;
+  $('#bobber').setAttribute('transform',`translate(${bob.x},${y})`);
+  const sag = 40 + Math.abs(tip.x-bob.x)*0.15;
+  $('#line').setAttribute('d', `M${tip.x},${tip.y} Q${(tip.x+bob.x)/2},${Math.max(tip.y,y)+sag} ${bob.x},${y-14}`);
+}
+function splashAt(x,y){
+  const s=document.createElement('div'); s.className='splash'; s.style.left=x+'px'; s.style.top=y+'px';
+  for(let i=0;i<12;i++){ const d=document.createElement('i'); const a=rnd(-2.6,-0.5); const v=rnd(30,70); d.style.setProperty('--dx', Math.cos(a)*v+'px'); d.style.setProperty('--dy', Math.sin(a)*v+'px'); d.style.animationDelay=(i*20)+'ms'; s.appendChild(d); }
+  $('#catchLayer').appendChild(s); setTimeout(()=>s.remove(),1200);
+}
+const BOTTLE_SVG = `<svg viewBox="0 0 180 360" style="width:100%;height:100%;overflow:visible"><g clip-path="url(#bodyClip)"><rect x="60" y="150" width="60" height="150" rx="6" fill="#F3E9D2" transform="rotate(-8 90 225)"/></g><path d="M62 80 Q62 60 90 60 Q118 60 118 80 L118 120 Q150 140 150 200 L150 320 Q150 350 120 350 L60 350 Q30 350 30 320 L30 200 Q30 140 62 120 Z" fill="url(#gl)" stroke="rgba(210,245,240,.8)" stroke-width="3"/><rect x="68" y="34" width="44" height="46" rx="8" fill="#9E6B3F" stroke="#6B4527" stroke-width="2"/></svg>`;
+
+/* =========================== fishing =========================== */
+let fishing=false;
+function updateNetUI(){
+  $('#netCount').textContent = `${net.length}/3`;
+  $('#netSlots').innerHTML = [0,1,2].map(i=>`<div class="slot ${net[i]?'full':''}">${net[i]?catOf(net[i].category).em:''}</div>`).join('');
+  const b=$('#netBadge'); b.hidden = net.length===0; b.textContent=net.length;
+  const full = net.length>=3;
+  $('#castBtn').disabled = full || fishing || !sea;
+  $('#castNote').textContent = !sea ? 'Finding the sea…' : full ? 'Your net is full. Answer a bottle first.' : wanted.length===0 ? 'Pick at least one kind of message.' : '';
+  if(wanted.length===0) $('#castBtn').disabled = true;
+}
+async function cast(){
+  if(fishing || net.length>=3 || !sea || wanted.length===0) return;
+  fishing=true; updateNetUI(); stats.casts++; store.set('stats',stats);
+  stageMsg(pick(['The line whistles out over the water.','A long cast, toward the moon\'s road.','Out it goes. Now the waiting.']));
+  const tip=rodTip(); const target = W*rnd(0.28,0.55);
+  // fly the bobber along an arc
+  bob.on=true; bob.dip=0; $('#bobber').style.display='';
+  const t0f=performance.now(), dur=900;
+  await new Promise(res=>{ (function fly(now){ const p=Math.min(1,(now-t0f)/dur); const e=1-Math.pow(1-p,2); bob.x = tip.x + (target-tip.x)*e; if(p<1) requestAnimationFrame(fly); else res(); })(t0f); });
+  splashAt(bob.x, bob.y);
+  // wait for the tug
+  const pool = await sea.listFloating(wanted).catch(()=>[]);
+  const candidates = pool.filter(b=>b.authorId!==me.id && !released.includes(b.id) && !net.some(n=>n.id===b.id));
+  const wait = reduced ? 400 : rnd(1600, 3600);
+  await sleep(wait);
+  stageMsg(pick(['…something took it.','A tug! Reel it in.','The bobber ducks under.']));
+  for(let i=0;i<3;i++){ bob.dip=10; await sleep(160); bob.dip=0; await sleep(140); }
+  // decide the catch: bottle (weighted by match) or creature
+  let result=null;
+  const wantBottle = Math.random() < 0.7 && candidates.length>0;
+  if(wantBottle){
+    const scored = candidates.map(b=>({b, m:match(profile, b.profile||{}, b.category)}));
+    for(let tries=0; tries<4 && !result; tries++){
+      const c = weightedPick(scored, s=>Math.exp(s.m.score/14));
+      const got = await sea.claimBottle(c.b.id).catch(e=>{console.warn(e);return null;});
+      if(got) result={type:'bottle', bottle:got, m:c.m}; else scored.splice(scored.indexOf(c),1);
+      if(!scored.length) break;
+    }
+  }
+  if(!result){
+    const rk = weightedPick(Object.keys(RARITY), k=>RARITY[k].w);
+    const sp = pick(SPECIES.filter(s=>s.r===rk));
+    result={type:'creature', sp, quiet: !candidates.length};
+  }
+  // reel in: bobber returns toward the rod, catch rises
+  const start=bob.x, back=W*0.68, t1=performance.now(), d2=700;
+  await new Promise(res=>{ (function reel(now){ const p=Math.min(1,(now-t1)/d2); bob.x=start+(back-start)*p; if(p<1) requestAnimationFrame(reel); else res(); })(t1); });
+  const el=document.createElement('div'); el.className='catch'+(result.type==='creature'?' creature':''); el.style.left=bob.x+'px'; el.style.top=(bob.y-100)+'px';
+  el.innerHTML = result.type==='bottle' ? BOTTLE_SVG : `<span>${result.sp.em}</span>`;
+  $('#catchLayer').appendChild(el); splashAt(bob.x,bob.y);
+  for(let i=0;i<5;i++){ const d=document.createElement('div'); d.className='drip'; d.style.left=(bob.x+rnd(-28,28))+'px'; d.style.top=(bob.y-40)+'px'; d.style.animationDelay=(i*150)+'ms'; $('#catchLayer').appendChild(d); setTimeout(()=>d.remove(),1500); }
+  requestAnimationFrame(()=>el.classList.add('up'));
+  bob.on=false; $('#bobber').style.display='none'; $('#line').setAttribute('d','');
+  await sleep(reduced?200:1500);
+  el.remove();
+  if(result.type==='bottle'){ stageMsg('A bottle. There is paper inside.'); stats.caught++; store.set('stats',stats); net.push({...result.bottle, forecast:result.m.exchanges, score:result.m.score}); store.set('net',net); updateNetUI(); renderNet(); openBottle(result.bottle, result.m); }
+  else { stageMsg(result.quiet ? 'The sea is quiet in that corner tonight. But not empty.' : 'Not a bottle, this time.'); collection[result.sp.id]=(collection[result.sp.id]||0)+1; store.set('collection',collection); renderPool(); showCreature(result.sp); }
+  fishing=false; updateNetUI(); pushPlayer();
+}
+
+/* =========================== overlay: opening =========================== */
+const overlay=$('#overlay'), bw=$('#bottleWrap'), letter=$('#letter'), cc=$('#creatureCard');
+let current=null, typing=null;
+function resetOverlay(){ bw.className='bottleWrap'; bw.style.display=''; letter.className='letter'; cc.className='creatureCard'; $('#lBody').innerHTML=''; overlay.classList.remove('on'); current=null; if(typing){clearTimeout(typing);typing=null;} }
+function openBottle(bottle, m, fromNet=false){
+  resetOverlay(); current={bottle,m,fromNet}; overlay.classList.add('on'); bw.focus();
+  $('#hint').textContent = 'Tap the bottle to uncork it';
+  $('#lKeep').textContent = fromNet ? 'Back to the net' : 'Keep in net';
+}
+bw.addEventListener('click', uncork); bw.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); uncork(); } });
+async function uncork(){
+  if(!current || bw.classList.contains('opened')) return;
+  bw.classList.add('opened'); $('#hint').textContent='';
+  const {bottle,m}=current; const c=catOf(bottle.category);
+  $('#lFrom').textContent = `From ${bottle.authorName||'a stranger'} · ${ago(bottle.createdAt)}${bottle.hops?` · thrown back ${bottle.hops}×`:''}`;
+  $('#lCat').textContent = `${c.em} ${c.name}`;
+  $('#lSig').textContent = `— ${bottle.authorName||'a stranger'}${bottle.seed?', a castaway of the old sea':''}`;
+  $('#lForecast').textContent = `~${m.exchanges} exchanges`; $('#lMeter').style.width='0%';
+  $('#lWhy').innerHTML = (m.why.length?m.why:[{t:'not much in common — yet'}]).slice(0,6).map(w=>`<span class="${w.shared?'shared':''}">${esc(w.t)}</span>`).join('');
+  await sleep(reduced?100:1900);
+  bw.style.display='none'; letter.classList.add('on');
+  await sleep(reduced?50:900);
+  // type the message out on the unrolled paper
+  const body=$('#lBody'); const text=bottle.text||''; const speed=Math.min(26, 7000/Math.max(1,text.length)); let i=0;
+  body.innerHTML='<span class="cursor"></span>';
+  await new Promise(res=>{ const step=()=>{ if(!current) return res(); i+= reduced?text.length:1; body.innerHTML = esc(text.slice(0,i)) + (i<text.length?'<span class="cursor"></span>':''); if(i<text.length) typing=setTimeout(step,speed); else res(); }; step(); });
+  letter.classList.add('done'); requestAnimationFrame(()=>{ $('#lMeter').style.width=m.score+'%'; });
+}
+letter.addEventListener('click', ()=>{ if(current && typing){ clearTimeout(typing); typing=null; $('#lBody').textContent=current.bottle.text; letter.classList.add('done'); $('#lMeter').style.width=current.m.score+'%'; } });
+$('#lKeep').addEventListener('click', ()=>{ resetOverlay(); showTab('net'); });
+$('#lRelease').addEventListener('click', async ()=>{ const b=current.bottle; resetOverlay(); await releaseBottle(b); });
+$('#lReply').addEventListener('click', ()=>{ const b=current.bottle, m=current.m; resetOverlay(); startReply(b, m); });
+function showCreature(sp){
+  resetOverlay(); overlay.classList.add('on'); bw.style.display='none';
+  $('#cKind').textContent = sp.kind==='flotsam' ? 'Flotsam on the line' : sp.kind==='crab' ? 'A crab on the line' : sp.kind==='fish' ? 'A fish on the line' : 'Something on the line';
+  $('#cEm').textContent=sp.em; $('#cName').textContent=sp.name; const r=RARITY[sp.r]; $('#cRarity').textContent=r.n; $('#cRarity').style.setProperty('--r', r.c);
+  $('#cDesc').textContent = (collection[sp.id]>1 ? `Another one. That makes ${collection[sp.id]}. ` : 'New to your tide pool. ') + sp.d;
+  requestAnimationFrame(()=>cc.classList.add('on'));
+}
+$('#cClose').addEventListener('click', ()=>{ resetOverlay(); });
+overlay.addEventListener('click', e=>{ if(e.target===overlay && cc.classList.contains('on')) resetOverlay(); });
+addEventListener('keydown', e=>{ if(e.key==='Escape' && overlay.classList.contains('on') && (cc.classList.contains('on') || letter.classList.contains('done'))) resetOverlay(); });
+
+/* =========================== net / release / reply =========================== */
+async function releaseBottle(b){
+  net = net.filter(n=>n.id!==b.id); store.set('net',net); released.push(b.id); store.set('released', released.slice(-100));
+  updateNetUI(); renderNet();
+  try{ await sea.releaseBottle(b.id); toast('Thrown back. The tide has it again.'); }catch(e){ console.warn(e); toast('Could not reach the sea. It is out of your net anyway.'); }
+  pushPlayer();
+}
+function renderNet(){
+  const list=$('#netList');
+  if(!net.length){ list.innerHTML='<div class="empty">Nothing in the net. Cast a line.</div>'; return; }
+  list.innerHTML = net.map(b=>{ const c=catOf(b.category); return `<button class="item" data-id="${esc(b.id)}"><span class="ico">${c.em}</span><span><span class="t">${esc(b.authorName||'A stranger')}</span><span class="s">${esc(b.text)}</span></span><span class="r"><b>~${b.forecast} exchanges</b>${ago(b.caughtAt||b.createdAt)}</span></button>`; }).join('');
+  list.querySelectorAll('.item').forEach(el=>el.addEventListener('click',()=>{ const b=net.find(n=>n.id===el.dataset.id); if(b) openBottle(b, match(profile, b.profile||{}, b.category), true); }));
+}
+let pendingReply=null;
+function startReply(bottle, m){
+  pendingReply={bottle,m}; showTab('letters'); openThreadView({ id:bottle.id, participants:[bottle.authorId, me.id], names:{[bottle.authorId]:bottle.authorName||'A stranger',[me.id]:displayName()}, category:bottle.category, forecast:m.exchanges, score:m.score, seed:!!bottle.seed, messages:[{from:bottle.authorId, text:bottle.text, at:bottle.createdAt}] }, true);
+  $('#replyText').focus();
+}
+async function sendReply(){
+  const text=$('#replyText').value.trim(); if(!text) return;
+  $('#sendBtn').disabled=true;
+  try{
+    if(pendingReply){
+      const {bottle,m}=pendingReply;
+      const t={ id:bottle.id, bottleId:bottle.id, participants:[bottle.authorId, me.id], names:{[bottle.authorId]:bottle.authorName||'A stranger',[me.id]:displayName()}, category:bottle.category, forecast:m.exchanges, score:m.score, seed:!!bottle.seed, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(), lastFrom:me.id, messages:[{from:bottle.authorId, text:bottle.text, at:bottle.createdAt},{from:me.id, text, at:new Date().toISOString()}] };
+      await sea.setThread(t); pendingReply=null;
+      net = net.filter(n=>n.id!==bottle.id); store.set('net',net); stats.replied++; store.set('stats',stats); updateNetUI(); renderNet();
+      seen[t.id]=t.messages.length; store.set('seen',seen);
+      threads = threads.filter(x=>x.id!==t.id).concat([t]); renderThreads(); openThreadView(t);
+      toast(bottle.seed ? 'Sent. Castaway bottles rarely answer, but the net is free.' : 'Sent. If they write back, it shows up here.');
+    } else if(openThread){
+      const fresh = await sea.getThread(openThread.id) || openThread;
+      const msgs=(fresh.messages||[]).slice(); msgs.push({from:me.id, text, at:new Date().toISOString()});
+      const t={...fresh, id:openThread.id, messages:msgs, updatedAt:new Date().toISOString(), lastFrom:me.id};
+      await sea.setThread(t); seen[t.id]=msgs.length; store.set('seen',seen);
+      threads = threads.filter(x=>x.id!==t.id).concat([t]); renderThreads(); openThreadView(t);
+    }
+    $('#replyText').value='';
+    pushPlayer();
+  }catch(e){ console.warn(e); toast(e&&e.code==='quota_exceeded' ? 'The sea is full. Older bottles need clearing before new ones go in.' : 'Could not reach the sea. Try again in a moment.'); }
+  $('#sendBtn').disabled=false;
+}
+$('#sendBtn').addEventListener('click', sendReply);
+$('#replyText').addEventListener('keydown', e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) sendReply(); });
+
+/* =========================== letters =========================== */
+let threads=[], openThread=null, unsubThreads=null;
+function unreadOf(t){ return Math.max(0, (t.messages||[]).length - (seen[t.id]||0)); }
+function otherName(t){ const o=(t.participants||[]).find(p=>p!==me.id); return (t.names||{})[o] || 'A stranger'; }
+function renderThreads(){
+  const list=$('#threadList'); const sorted=threads.slice().sort((a,b)=>new Date(b.updatedAt||0)-new Date(a.updatedAt||0));
+  const unread = sorted.reduce((n,t)=>n+(unreadOf(t)>0 && t.lastFrom!==me.id?1:0),0);
+  const lb=$('#letterBadge'); lb.hidden=unread===0; lb.textContent=unread;
+  $('#lettersNote').textContent = sorted.length ? `${sorted.length} conversation${sorted.length>1?'s':''}` : '';
+  if(!sorted.length){ list.innerHTML='<div class="empty">No letters yet. Answer a bottle from your net, or throw one and wait for the tide.</div>'; return; }
+  list.innerHTML = sorted.map(t=>{ const c=catOf(t.category); const last=(t.messages||[]).slice(-1)[0]||{}; const n=(t.messages||[]).length; const u=unreadOf(t)>0 && t.lastFrom!==me.id;
+    return `<button class="item ${u?'unread':''}" data-id="${esc(t.id)}"><span class="ico">${c.em}</span><span><span class="t">${esc(otherName(t))}${t.seed?' <span class="muted" style="font-size:12px">· castaway</span>':''}</span><span class="s">${last.from===me.id?'You: ':''}${esc(last.text||'')}</span></span><span class="r"><b class="num">${n} / ~${t.forecast||'?'}</b>${u?'new reply':ago(t.updatedAt||last.at||new Date().toISOString())}</span></button>`; }).join('');
+  list.querySelectorAll('.item').forEach(el=>el.addEventListener('click',()=>{ const t=threads.find(x=>x.id===el.dataset.id); if(t){ pendingReply=null; openThreadView(t); } }));
+}
+function openThreadView(t, isNew=false){
+  openThread=t; $('#lettersHome').hidden=true; $('#threadView').hidden=false;
+  const c=catOf(t.category);
+  $('#threadWith').textContent = `${c.em} with ${otherName(t)}`;
+  const n=(t.messages||[]).length;
+  $('#threadForecast').textContent = isNew ? `Tide forecast ~${t.forecast} exchanges` : `${n} message${n!==1?'s':''} · forecast ~${t.forecast||'?'}${n>(t.forecast||0)?' · beat the forecast':''}`;
+  const box=$('#msgs'); box.innerHTML=(t.messages||[]).map(m=>`<div class="msg ${m.from===me.id?'me':'them'}">${esc(m.text)}<small>${m.from===me.id?'you':esc((t.names||{})[m.from]||'them')} · ${ago(m.at)}</small></div>`).join('');
+  if(t.seed && n<=2) box.insertAdjacentHTML('beforeend','<div class="note" style="text-align:center">This bottle came from a castaway of the old sea. They may never write back, but the net is yours again.</div>');
+  box.scrollTop=box.scrollHeight;
+  if(!isNew){ seen[t.id]=n; store.set('seen',seen); renderThreads(); }
+}
+$('#backThreads').addEventListener('click', ()=>{ openThread=null; pendingReply=null; $('#threadView').hidden=true; $('#lettersHome').hidden=false; renderThreads(); });
+function watchLetters(){
+  if(unsubThreads) unsubThreads();
+  unsubThreads = sea.watchThreads(list=>{
+    const before = Object.fromEntries(threads.map(t=>[t.id,(t.messages||[]).length]));
+    threads=list; renderThreads();
+    list.forEach(t=>{ if(before[t.id]!=null && (t.messages||[]).length>before[t.id] && t.lastFrom!==me.id) toast(`${otherName(t)} wrote back.`); });
+    if(openThread){ const fresh=list.find(t=>t.id===openThread.id); if(fresh && fresh!==openThread) openThreadView(fresh); }
+  });
+}
+
+/* =========================== throw =========================== */
+let throwCat = store.get('throwCat','question');
+function renderCatPick(){ $('#catPick').innerHTML = CATS.map(c=>`<button class="chip" aria-pressed="${c.id===throwCat}" data-id="${c.id}">${c.em} ${c.name}</button>`).join('');
+  $('#catPick').querySelectorAll('.chip').forEach(el=>el.addEventListener('click',()=>{ throwCat=el.dataset.id; store.set('throwCat',throwCat); renderCatPick(); })); }
+$('#throwText').addEventListener('input', e=>{ $('#throwCount').textContent=e.target.value.length; });
+async function throwBottle(){
+  const text=$('#throwText').value.trim(); if(text.length<8){ toast('Write a little more. The finder deserves at least a sentence.'); return; }
+  if(!sea){ toast('Still finding the sea…'); return; }
+  $('#throwBtn').disabled=true;
+  try{
+    const afloat = await sea.countFloatingBy(me.id);
+    if(afloat>=5){ toast('Five of your bottles are already afloat. Wait for one to be found.'); $('#throwBtn').disabled=false; return; }
+    const b={ id:uid('b'), authorId:me.id, authorName:displayName(), profile:{...profile}, category:throwCat, text, createdAt:new Date().toISOString(), status:'floating', hops:0 };
+    // animate: bottle arcs from the rod into the sea
+    const tip=rodTip(); const el=document.createElement('div'); el.className='throwBottle'; el.innerHTML=BOTTLE_SVG; $('#catchLayer').appendChild(el);
+    const tx=W*rnd(0.2,0.5), t1=performance.now(), dur=reduced?50:1100;
+    await new Promise(res=>{ (function fly(now){ const p=Math.min(1,(now-t1)/dur); const x=tip.x+(tx-tip.x)*p; const y=tip.y - Math.sin(p*Math.PI)*140 + (waveY(tx,now-t0,0)-tip.y)*p; el.style.left=x+'px'; el.style.top=y+'px'; el.style.transform=`translate(-50%,-50%) rotate(${p*540}deg) scale(${1-p*.5})`; if(p<1) requestAnimationFrame(fly); else res(); })(t1); });
+    splashAt(tx, waveY(tx,performance.now()-t0,0)); el.remove();
+    await sea.addBottle(b);
+    stats.thrown++; store.set('stats',stats); $('#throwText').value=''; $('#throwCount').textContent='0';
+    stageMsg('Gone. Somewhere out there, a line will find it.'); toast('Your bottle is afloat.'); refreshFloating(); pushPlayer();
+  }catch(e){ console.warn(e); toast(e&&e.code==='quota_exceeded' ? 'The sea is full of bottles right now. Try later.' : 'Could not reach the sea. Try again.'); }
+  $('#throwBtn').disabled=false;
+}
+$('#throwBtn').addEventListener('click', throwBottle);
+async function refreshFloating(){ if(!sea) return; try{ const mine=await sea.countFloatingBy(me.id); $('#floatingNote').textContent=`${mine} of your bottles afloat (max 5)`; const all=await sea.countAllFloating(); $('#seaStatus').innerHTML = sea.kind==='shared' ? `Shared sea · <b class="num">${all}</b> bottle${all!==1?'s':''} afloat` : `Offline harbour · <b class="num">${all}</b> practice bottles`; }catch(e){ console.warn(e); } }
+
+/* =========================== fish filter =========================== */
+function renderCatFilter(){ $('#catFilter').innerHTML = CATS.map(c=>`<button class="chip" aria-pressed="${wanted.includes(c.id)}" data-id="${c.id}" title="${esc(c.blurb)}">${c.em} ${c.name}</button>`).join('');
+  $('#catFilter').querySelectorAll('.chip').forEach(el=>el.addEventListener('click',()=>{ const id=el.dataset.id; wanted = wanted.includes(id) ? wanted.filter(x=>x!==id) : wanted.concat([id]); store.set('wanted',wanted); renderCatFilter(); updateNetUI(); })); }
+$('#castBtn').addEventListener('click', cast);
+
+/* =========================== tide pool =========================== */
+function renderPool(){
+  const have=Object.keys(collection).length; $('#poolNote').textContent=`${have} of ${SPECIES.length} species`;
+  $('#poolGrid').innerHTML = SPECIES.map(s=>{ const n=collection[s.id]||0; const r=RARITY[s.r]; return `<div class="spec ${n?'':'locked'}" style="--r:${r.c}" title="${esc(n?s.d:'Not yet found')}"><span class="em">${n?s.em:'❔'}</span><span class="nm">${n?esc(s.name):'???'}</span><span class="ct">${n?`×${n} · ${r.n}`:r.n}</span></div>`; }).join('');
+}
+
+/* =========================== profile =========================== */
+function renderProfile(){
+  $('#pName').value=profile.name; $('#pAge').value=profile.age; $('#pTemper').value=profile.temper; $('#pPace').value=profile.pace;
+  $('#pInterests').innerHTML = INTERESTS.map(i=>`<button class="chip small" aria-pressed="${profile.interests.includes(i)}" data-id="${i}">${i}</button>`).join('');
+  $('#pInterests').querySelectorAll('.chip').forEach(el=>el.addEventListener('click',()=>{ const i=el.dataset.id; if(profile.interests.includes(i)) profile.interests=profile.interests.filter(x=>x!==i); else if(profile.interests.length<6) profile.interests.push(i); else toast('Six is plenty. Drop one to add another.'); renderProfile(); }));
+  $('#pMood').innerHTML = MOODS.map(m=>`<button class="chip small" aria-pressed="${profile.mood===m.id}" data-id="${m.id}">${m.name}</button>`).join('');
+  $('#pMood').querySelectorAll('.chip').forEach(el=>el.addEventListener('click',()=>{ profile.mood=el.dataset.id; renderProfile(); }));
+  const tz=profile.tz; $('#pHours').textContent = `UTC${tz>=0?'+':''}${tz} · it is ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} for you`;
+  $('#pLang').textContent = profile.lang; $('#pId').textContent = me.id;
+}
+$('#saveProfile').addEventListener('click', ()=>{ profile.name=$('#pName').value.trim().slice(0,24); profile.age=+$('#pAge').value; profile.temper=+$('#pTemper').value; profile.pace=+$('#pPace').value; store.set('profile',profile); toast('Saved. The tide knows you a little better.'); pushPlayer(); });
+let pushT; function pushPlayer(){ clearTimeout(pushT); pushT=setTimeout(()=>{ if(sea) sea.savePlayer({name:displayName(), profile, stats, collection, net:net.length, updatedAt:new Date().toISOString()}); }, 800); }
+
+/* =========================== tabs / boot =========================== */
+function showTab(id){ document.querySelectorAll('#tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===id)); document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on', p.dataset.panel===id)); if(id==='letters' && !openThread) renderThreads(); }
+document.querySelectorAll('#tabs [role=tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+resize(); requestAnimationFrame(draw);
+renderCatFilter(); renderCatPick(); renderNet(); renderPool(); renderProfile(); updateNetUI(); renderThreads();
+stageMsg(profile.name ? `Evening, ${profile.name}. The tide is in.` : 'Welcome to the harbour. Tell the sea who you are under Me, then cast a line.');
+
+(async () => {
+  let db=null;
+  try{ db = window.claude && window.claude.use ? await window.claude.use('db') : null; }catch(e){ console.warn(e); }
+  if(db){ sea=DbStore(db); $('#seaStatus').className='pill live'; }
+  else { sea=LocalStore(); $('#seaStatus').className='pill offline'; $('#seaStatus').textContent='Offline harbour'; toast('No shared sea here, so this harbour holds practice bottles only.'); }
+  updateNetUI(); watchLetters(); refreshFloating(); pushPlayer();
+  setInterval(refreshFloating, 60000);
+})();
+})();
+</script>

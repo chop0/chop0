@@ -1,0 +1,625 @@
+[
+ {
+  "id": "b_seed01",
+  "authorId": "castaway_ines0",
+  "authorName": "Ines",
+  "profile": {
+   "name": "Ines",
+   "age": 2,
+   "interests": [
+    "sea",
+    "poetry",
+    "coffee",
+    "late nights"
+   ],
+   "temper": 2,
+   "pace": 4,
+   "mood": "lonely",
+   "tz": 1,
+   "lang": "pt"
+  },
+  "category": "romance",
+  "text": "I don't know who will find this. I only know I wanted to write to someone who isn't already tired of me. Tell me one thing you love that nobody asks you about. I'll tell you mine: the sound of the harbour chain at 3am, when the boats pull against it like they want to leave too.",
+  "createdAt": "2026-09-05T23:35:31.462Z",
+  "status": "floating",
+  "hops": 1,
+  "seed": true
+ },
+ {
+  "id": "b_seed02",
+  "authorId": "castaway_tomasz1",
+  "authorName": "Tomasz",
+  "profile": {
+   "name": "Tomasz",
+   "age": 3,
+   "interests": [
+    "hiking",
+    "cooking",
+    "history",
+    "animals"
+   ],
+   "temper": 3,
+   "pace": 3,
+   "mood": "hopeful",
+   "tz": 1,
+   "lang": "pl"
+  },
+  "category": "romance",
+  "text": "My grandmother met my grandfather because of a letter delivered to the wrong flat. I'm not asking the sea for the same luck. I'm just saying I've stopped ruling it out. What was the last small thing that made you happy?",
+  "createdAt": "2026-08-29T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed03",
+  "authorId": "castaway_maya2",
+  "authorName": "Maya",
+  "profile": {
+   "name": "Maya",
+   "age": 1,
+   "interests": [
+    "music",
+    "film",
+    "cities",
+    "late nights"
+   ],
+   "temper": 4,
+   "pace": 2,
+   "mood": "playful",
+   "tz": -5,
+   "lang": "en"
+  },
+  "category": "romance",
+  "text": "Rules for whoever fishes this up: 1) You have to tell me your favourite song right now, not your all-time one. 2) No talking about work. 3) If we get to ten letters we have to invent a secret handshake we'll never use. Deal?",
+  "createdAt": "2026-08-22T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed04",
+  "authorId": "castaway_ruth3",
+  "authorName": "Ruth",
+  "profile": {
+   "name": "Ruth",
+   "age": 4,
+   "interests": [
+    "gardens",
+    "books",
+    "animals",
+    "history"
+   ],
+   "temper": 2,
+   "pace": 5,
+   "mood": "calm",
+   "tz": 0,
+   "lang": "en"
+  },
+  "category": "lessons",
+  "text": "I am sixty-one and I have learned exactly one thing worth writing down: nobody is thinking about you as much as you think they are. It sounds cruel, but it is the most freeing sentence I know. Wear the coat. Sing on the bus. Send the letter.",
+  "createdAt": "2026-08-15T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed05",
+  "authorId": "castaway_dev4",
+  "authorName": "Dev",
+  "profile": {
+   "name": "Dev",
+   "age": 2,
+   "interests": [
+    "coding",
+    "science",
+    "games",
+    "coffee"
+   ],
+   "temper": 3,
+   "pace": 3,
+   "mood": "thoughtful",
+   "tz": 5.5,
+   "lang": "en"
+  },
+  "category": "lessons",
+  "text": "I spent three years building something nobody used. What I'd tell my past self isn't \"don't\"; it's \"show someone after three weeks, not three years.\" Does anyone else have a lesson that cost too much to learn?",
+  "createdAt": "2026-08-08T23:35:31.470Z",
+  "status": "floating",
+  "hops": 1,
+  "seed": true
+ },
+ {
+  "id": "b_seed06",
+  "authorId": "castaway_halima5",
+  "authorName": "Halima",
+  "profile": {
+   "name": "Halima",
+   "age": 3,
+   "interests": [
+    "cooking",
+    "travel",
+    "philosophy",
+    "music"
+   ],
+   "temper": 3,
+   "pace": 4,
+   "mood": "hopeful",
+   "tz": 3,
+   "lang": "ar"
+  },
+  "category": "lessons",
+  "text": "When my father was dying he said the days he regretted were not the ones where he failed, but the ones where he didn't try because he was afraid of looking foolish. I think about it whenever I hesitate before speaking to a stranger. Hello, stranger.",
+  "createdAt": "2026-08-01T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed07",
+  "authorId": "castaway_anonymous6",
+  "authorName": "Anonymous",
+  "profile": {
+   "name": "Anonymous",
+   "age": 0,
+   "interests": [
+    "late nights",
+    "film",
+    "cities"
+   ],
+   "temper": 2,
+   "pace": 3,
+   "mood": "restless",
+   "tz": -8,
+   "lang": "en"
+  },
+  "category": "confess",
+  "text": "I still have my ex's Netflix password. Not because I use it. Because logging out would make it real. That's the whole confession. It feels smaller now that it's in a bottle.",
+  "createdAt": "2026-09-03T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed08",
+  "authorId": "castaway_j7",
+  "authorName": "J.",
+  "profile": {
+   "name": "J.",
+   "age": 2,
+   "interests": [
+    "music",
+    "art",
+    "coffee",
+    "poetry"
+   ],
+   "temper": 2,
+   "pace": 4,
+   "mood": "lonely",
+   "tz": 2,
+   "lang": "de"
+  },
+  "category": "confess",
+  "text": "I told everyone I moved here for the job. I moved here because I wanted to be somewhere nobody knew the old version of me. It worked, mostly. The problem is that nobody knows the new one either.",
+  "createdAt": "2026-08-27T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed09",
+  "authorId": "castaway_marisol8",
+  "authorName": "Marisol",
+  "profile": {
+   "name": "Marisol",
+   "age": 3,
+   "interests": [
+    "cooking",
+    "animals",
+    "gardens",
+    "football"
+   ],
+   "temper": 4,
+   "pace": 2,
+   "mood": "playful",
+   "tz": -6,
+   "lang": "es"
+  },
+  "category": "confess",
+  "text": "I pretend my dog's vet appointments run long so I can sit in the car for twenty minutes with the radio on. That's it. Twenty minutes where nobody needs anything. Do you have a place like that?",
+  "createdAt": "2026-08-20T23:35:31.470Z",
+  "status": "floating",
+  "hops": 1,
+  "seed": true
+ },
+ {
+  "id": "b_seed10",
+  "authorId": "castaway_kenji9",
+  "authorName": "Kenji",
+  "profile": {
+   "name": "Kenji",
+   "age": 2,
+   "interests": [
+    "science",
+    "philosophy",
+    "games",
+    "hiking"
+   ],
+   "temper": 2,
+   "pace": 3,
+   "mood": "thoughtful",
+   "tz": 9,
+   "lang": "ja"
+  },
+  "category": "question",
+  "text": "If you could know the exact number of times you'll see the ocean for the rest of your life, would you want to? I keep changing my answer. I'm curious what yours is tonight.",
+  "createdAt": "2026-08-13T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed11",
+  "authorId": "castaway_priya10",
+  "authorName": "Priya",
+  "profile": {
+   "name": "Priya",
+   "age": 1,
+   "interests": [
+    "books",
+    "film",
+    "art",
+    "cities"
+   ],
+   "temper": 3,
+   "pace": 3,
+   "mood": "hopeful",
+   "tz": 5.5,
+   "lang": "en"
+  },
+  "category": "question",
+  "text": "What is something you were completely wrong about, and glad to be? Mine: I thought I hated cities. Turns out I hated the one I grew up in.",
+  "createdAt": "2026-08-06T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed12",
+  "authorId": "castaway_owen11",
+  "authorName": "Owen",
+  "profile": {
+   "name": "Owen",
+   "age": 3,
+   "interests": [
+    "football",
+    "history",
+    "cooking",
+    "travel"
+   ],
+   "temper": 5,
+   "pace": 2,
+   "mood": "playful",
+   "tz": 0,
+   "lang": "en"
+  },
+  "category": "question",
+  "text": "Serious question for a stranger: what's the best sandwich you have ever eaten, and where were you when you ate it? The where matters more than the sandwich. I'll go second.",
+  "createdAt": "2026-07-30T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed13",
+  "authorId": "castaway_agnes12",
+  "authorName": "Agnes",
+  "profile": {
+   "name": "Agnes",
+   "age": 4,
+   "interests": [
+    "sea",
+    "history",
+    "books",
+    "gardens"
+   ],
+   "temper": 2,
+   "pace": 5,
+   "mood": "calm",
+   "tz": -1,
+   "lang": "fr"
+  },
+  "category": "story",
+  "text": "In 1994 my brother threw a bottle off the ferry at Roscoff. In 2011 a woman in Cornwall wrote to say she'd found it on a beach the morning after her divorce was final, and that \"it made a bad day strange instead of just bad.\" That's all I want this one to do.",
+  "createdAt": "2026-09-01T23:35:31.470Z",
+  "status": "floating",
+  "hops": 1,
+  "seed": true
+ },
+ {
+  "id": "b_seed14",
+  "authorId": "castaway_bakary13",
+  "authorName": "Bakary",
+  "profile": {
+   "name": "Bakary",
+   "age": 2,
+   "interests": [
+    "music",
+    "coding",
+    "cities",
+    "late nights"
+   ],
+   "temper": 3,
+   "pace": 4,
+   "mood": "restless",
+   "tz": 0,
+   "lang": "en"
+  },
+  "category": "story",
+  "text": "Last winter the power went out on our whole street and everyone came outside like it was a fire drill. A neighbour I had never spoken to in four years brought out a guitar. Now we have a group chat. It took a blackout. What did it take on your street?",
+  "createdAt": "2026-08-25T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed15",
+  "authorId": "castaway_linnea14",
+  "authorName": "Linnea",
+  "profile": {
+   "name": "Linnea",
+   "age": 3,
+   "interests": [
+    "hiking",
+    "animals",
+    "sea",
+    "science"
+   ],
+   "temper": 2,
+   "pace": 4,
+   "mood": "thoughtful",
+   "tz": 1,
+   "lang": "sv"
+  },
+  "category": "story",
+  "text": "I once got lost on a fell walk and was found by a sheepdog who simply refused to leave me alone until I followed it to a farmhouse. The farmer said she does that. She just picks people. I think about being picked a lot.",
+  "createdAt": "2026-08-18T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed16",
+  "authorId": "castaway_sam15",
+  "authorName": "Sam",
+  "profile": {
+   "name": "Sam",
+   "age": 2,
+   "interests": [
+    "games",
+    "music",
+    "coffee",
+    "film"
+   ],
+   "temper": 4,
+   "pace": 2,
+   "mood": "hopeful",
+   "tz": -5,
+   "lang": "en"
+  },
+  "category": "cheer",
+  "text": "Whoever you are: you got up today. You're out here fishing for messages instead of doomscrolling. That's two wins before lunch. Tell me a third and I'll believe you.",
+  "createdAt": "2026-08-11T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed17",
+  "authorId": "castaway_nadia16",
+  "authorName": "Nadia",
+  "profile": {
+   "name": "Nadia",
+   "age": 3,
+   "interests": [
+    "gardens",
+    "cooking",
+    "books",
+    "animals"
+   ],
+   "temper": 3,
+   "pace": 3,
+   "mood": "calm",
+   "tz": 2,
+   "lang": "ru"
+  },
+  "category": "cheer",
+  "text": "I planted tomatoes in April knowing my landlord might sell the flat by summer. He did. But somebody is eating those tomatoes. Plant the thing anyway. I mean it in whatever way you need me to mean it.",
+  "createdAt": "2026-08-04T23:35:31.470Z",
+  "status": "floating",
+  "hops": 1,
+  "seed": true
+ },
+ {
+  "id": "b_seed18",
+  "authorId": "castaway_theo17",
+  "authorName": "Theo",
+  "profile": {
+   "name": "Theo",
+   "age": 1,
+   "interests": [
+    "football",
+    "hiking",
+    "science",
+    "travel"
+   ],
+   "temper": 5,
+   "pace": 2,
+   "mood": "playful",
+   "tz": 10,
+   "lang": "en"
+  },
+  "category": "cheer",
+  "text": "Greetings from the far side of the clock. It is already tomorrow here and I can confirm: it's fine. You get there. Whatever tonight is, it's already behind someone.",
+  "createdAt": "2026-07-28T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed19",
+  "authorId": "castaway_fran18",
+  "authorName": "Fran",
+  "profile": {
+   "name": "Fran",
+   "age": 3,
+   "interests": [
+    "film",
+    "coffee",
+    "cities",
+    "art"
+   ],
+   "temper": 4,
+   "pace": 2,
+   "mood": "playful",
+   "tz": -3,
+   "lang": "en"
+  },
+  "category": "joke",
+  "text": "I told my therapist I keep hearing the sea. She said that's normal, I live by the sea. I said no, it's in my headphones, I can't work out how to change the app. Anyway she charged me for the full hour. Got a better one?",
+  "createdAt": "2026-08-30T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed20",
+  "authorId": "castaway_mikael19",
+  "authorName": "Mikael",
+  "profile": {
+   "name": "Mikael",
+   "age": 2,
+   "interests": [
+    "coding",
+    "games",
+    "science",
+    "late nights"
+   ],
+   "temper": 2,
+   "pace": 3,
+   "mood": "restless",
+   "tz": 2,
+   "lang": "fi"
+  },
+  "category": "joke",
+  "text": "Threw a bottle in last week with a joke about recursion. Still waiting for it to come back. Meanwhile: why did the crab never share? Because it was shellfish. Yes, I know. Reply with a worse one and I'll respect you.",
+  "createdAt": "2026-08-23T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed21",
+  "authorId": "castaway_cleo20",
+  "authorName": "Cleo",
+  "profile": {
+   "name": "Cleo",
+   "age": 2,
+   "interests": [
+    "art",
+    "poetry",
+    "sea",
+    "travel"
+   ],
+   "temper": 3,
+   "pace": 5,
+   "mood": "thoughtful",
+   "tz": -7,
+   "lang": "en"
+  },
+  "category": "romance",
+  "text": "I'm not looking for love, I'm looking for the kind of letter you read twice. If you're the kind of person who reads things twice, write back. Tell me the last line of the book on your nightstand.",
+  "createdAt": "2026-08-16T23:35:31.470Z",
+  "status": "floating",
+  "hops": 1,
+  "seed": true
+ },
+ {
+  "id": "b_seed22",
+  "authorId": "castaway_ibrahim21",
+  "authorName": "Ibrahim",
+  "profile": {
+   "name": "Ibrahim",
+   "age": 3,
+   "interests": [
+    "philosophy",
+    "history",
+    "coffee",
+    "cooking"
+   ],
+   "temper": 2,
+   "pace": 5,
+   "mood": "calm",
+   "tz": 3,
+   "lang": "tr"
+  },
+  "category": "question",
+  "text": "Do you think people are mostly the same everywhere, or mostly different? I have moved countries three times and I change my mind every time the coffee is good.",
+  "createdAt": "2026-08-09T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed23",
+  "authorId": "castaway_wren22",
+  "authorName": "Wren",
+  "profile": {
+   "name": "Wren",
+   "age": 1,
+   "interests": [
+    "animals",
+    "gardens",
+    "music",
+    "poetry"
+   ],
+   "temper": 2,
+   "pace": 3,
+   "mood": "lonely",
+   "tz": -8,
+   "lang": "en"
+  },
+  "category": "story",
+  "text": "My first week alone in a new city, a crow started leaving bottle caps on my windowsill. I've started leaving peanuts. We are, I think, friends now. It is the only friend I have here. It's a good one though.",
+  "createdAt": "2026-08-02T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ },
+ {
+  "id": "b_seed24",
+  "authorId": "castaway_gus23",
+  "authorName": "Gus",
+  "profile": {
+   "name": "Gus",
+   "age": 4,
+   "interests": [
+    "sea",
+    "football",
+    "cooking",
+    "history"
+   ],
+   "temper": 4,
+   "pace": 3,
+   "mood": "hopeful",
+   "tz": 10,
+   "lang": "en"
+  },
+  "category": "lessons",
+  "text": "Forty years on trawlers. The lesson: the sea doesn't care, and that's the good news. It means you don't have to take any of it personally. Apply to weather, bosses, and most of the internet.",
+  "createdAt": "2026-09-04T23:35:31.470Z",
+  "status": "floating",
+  "hops": 0,
+  "seed": true
+ }
+]
